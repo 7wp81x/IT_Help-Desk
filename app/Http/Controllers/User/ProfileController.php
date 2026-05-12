@@ -1,0 +1,289 @@
+<?php
+
+namespace App\Http\Controllers\User;
+
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+
+class ProfileController extends \App\Http\Controllers\Controller
+{
+    public function __construct()
+    {
+        $this->middleware('auth');
+    }
+
+    /**
+     * Show the user profile page
+     */
+    public function index()
+    {
+        $user = Auth::user();
+
+        // Get user statistics
+        $stats = [
+            'total_tickets' => $user->tickets()->count(),
+            'open_tickets' => $user->tickets()->whereIn('status', ['open', 'in_progress', 'pending'])->count(),
+            'resolved_tickets' => $user->tickets()->where('status', 'resolved')->count(),
+            'closed_tickets' => $user->tickets()->where('status', 'closed')->count(),
+            'comments_count' => $user->comments()->count(),
+        ];
+
+        // Get recent activities
+        $recentActivities = $user->activities()
+            ->with('ticket')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
+            ->get();
+
+        return view('user.profile.index', compact('user', 'stats', 'recentActivities'));
+    }
+
+    /**
+     * Show the change password page
+     */
+    public function password()
+    {
+        return view('user.profile.password');
+    }
+
+    /**
+     * Update user profile information
+     */
+    public function update(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                Rule::unique('users')->ignore($user->id),
+            ],
+            'department' => 'nullable|string|max:100',
+            'phone' => 'nullable|string|max:20',
+        ]);
+
+        try {
+            // Update user information
+            $user->name = $request->name;
+            $user->email = $request->email;
+            $user->department = $request->department;
+            $user->phone = $request->phone;
+            $user->save();
+
+            return redirect()->route('user.profile')
+                ->with('success', 'Profile updated successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to update profile. Please try again.');
+        }
+    }
+
+public function updatePassword(Request $request)
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'confirmed',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]+$/',
+            ],
+        ]);
+
+        $user = Auth::user();
+
+        // Check current password
+        if (!Hash::check($request->current_password, $user->password)) {
+            return redirect()->back()
+                ->with('error', 'Current password is incorrect.');
+        }
+
+        // Update password
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return redirect()->route('user.profile')
+            ->with('success', 'Password changed successfully!');
+    }
+
+    /**
+     * Update user preferences (theme, notifications, etc.)
+     */
+    public function updatePreferences(Request $request)
+    {
+        $user = Auth::user();
+
+        $request->validate([
+            'theme' => 'nullable|in:light,dark',
+            'email_notifications' => 'boolean',
+            'desktop_notifications' => 'boolean',
+        ]);
+
+        $preferences = $user->preferences ?? [];
+        $preferences['theme'] = $request->theme ?? 'light';
+        $preferences['email_notifications'] = $request->email_notifications ?? false;
+        $preferences['desktop_notifications'] = $request->desktop_notifications ?? false;
+
+        $user->preferences = $preferences;
+        $user->save();
+
+        return redirect()->route('user.profile')
+            ->with('success', 'Preferences updated successfully!');
+    }
+
+    /**
+     * Upload profile avatar via AJAX
+     */
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+
+        $user = Auth::user();
+
+        try {
+            // Delete old avatar
+            if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+                Storage::disk('public')->delete('avatars/' . $user->avatar);
+            }
+
+            // Upload new avatar
+            $avatar = $request->file('avatar');
+            $avatarName = time() . '_' . uniqid() . '.' . $avatar->getClientOriginalExtension();
+            $avatar->storeAs('avatars', $avatarName, 'public');
+
+            $user->avatar = $avatarName;
+            $user->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Avatar updated successfully!',
+                'avatar_url' => $user->avatar_url
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload avatar.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove uploaded avatar and restore default fallback.
+     */
+    public function removeAvatar(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+            Storage::disk('public')->delete('avatars/' . $user->avatar);
+        }
+
+        $user->avatar = null;
+        $user->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Avatar removed successfully.',
+            'avatar_url' => $user->avatar_url
+        ]);
+    }
+
+    /**
+     * Delete user account (with confirmation)
+     */
+    public function deleteAccount(Request $request)
+    {
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+
+        $user = Auth::user();
+
+        // Verify password
+        if (!Hash::check($request->password, $user->password)) {
+            return redirect()->back()
+                ->with('error', 'Password is incorrect.');
+        }
+
+        // Check if user has open tickets
+        $openTickets = $user->tickets()->whereIn('status', ['open', 'in_progress', 'pending'])->count();
+        if ($openTickets > 0) {
+            return redirect()->back()
+                ->with('error', 'Cannot delete account with open tickets. Please resolve or close them first.');
+        }
+
+        try {
+            // Delete user avatar
+            if ($user->avatar && Storage::disk('public')->exists('avatars/' . $user->avatar)) {
+                Storage::disk('public')->delete('avatars/' . $user->avatar);
+            }
+
+            // Delete user (cascade will handle related data if set in migrations)
+            $user->delete();
+
+            Auth::logout();
+
+            return redirect()->route('welcome')
+                ->with('success', 'Your account has been deleted successfully.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Failed to delete account. Please contact support.');
+        }
+    }
+
+    /**
+     * Export user data (GDPR compliance)
+     */
+    public function exportData()
+    {
+        $user = Auth::user();
+
+        $data = [
+            'user' => $user->toArray(),
+            'tickets' => $user->tickets()->with(['category', 'comments', 'attachments'])->get()->toArray(),
+            'comments' => $user->comments()->get()->toArray(),
+            'activities' => $user->activities()->get()->toArray(),
+            'exported_at' => now()->toDateTimeString(),
+        ];
+
+        $fileName = 'user_data_' . $user->id . '_' . now()->format('Ymd_His') . '.json';
+        $jsonData = json_encode($data, JSON_PRETTY_PRINT);
+
+        return response($jsonData)
+            ->header('Content-Type', 'application/json')
+            ->header('Content-Disposition', 'attachment; filename="' . $fileName . '"');
+    }
+
+    /**
+     * Get user activity log
+     */
+    public function getActivityLog()
+    {
+        $user = Auth::user();
+
+        $activities = $user->activities()
+            ->with('ticket')
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
+
+        if (request()->ajax()) {
+            return response()->json($activities);
+        }
+
+        return view('user.profile.activities', compact('activities'));
+    }
+}
