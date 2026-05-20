@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Agent;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -37,11 +38,19 @@ class ProfileController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $agent->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', 'philippine_phone'],
+            'department_id' => 'nullable|exists:departments,id',
             'department' => 'nullable|string|max:255',
         ]);
 
-        $agent->update($request->only(['name', 'email', 'phone', 'department']));
+        if (empty($request->input('department_id')) && $request->filled('department')) {
+            $department = Department::where('name', $request->input('department'))->first();
+            $agent->department_id = $department ? $department->id : null;
+        } else {
+            $agent->department_id = $request->input('department_id');
+        }
+
+        $agent->update($request->only(['name', 'email', 'phone']));
 
         return redirect()->route('agent.profile')
             ->with('success', 'Profile updated successfully.');

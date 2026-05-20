@@ -1,7 +1,7 @@
 <!-- Statistics Cards - Row 1 -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
     <!-- Total Tickets Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.tickets.all') }}" class="group relative overflow-hidden bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
@@ -16,10 +16,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- Open Tickets Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.tickets.open') }}" class="group relative overflow-hidden bg-gradient-to-br from-yellow-500 to-yellow-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
@@ -34,10 +34,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- In Progress Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.tickets.in-progress') }}" class="group relative overflow-hidden bg-gradient-to-br from-indigo-500 to-indigo-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="relative p-3 md:p-4">
@@ -51,10 +51,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- Resolved Tickets Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-green-500 to-green-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.tickets.resolved') }}" class="group relative overflow-hidden bg-gradient-to-br from-green-500 to-green-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
@@ -69,13 +69,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 </div>
 
 <!-- Statistics Cards - Row 2 -->
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-4 md:mb-6">
     <!-- Closed Tickets Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.tickets.closed') }}" class="group relative overflow-hidden bg-gradient-to-br from-gray-500 to-gray-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="relative p-3 md:p-4">
@@ -89,10 +89,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- Total Agents Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-cyan-500 to-cyan-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.users.agents') }}" class="group relative overflow-hidden bg-gradient-to-br from-cyan-500 to-cyan-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="relative p-3 md:p-4">
@@ -106,10 +106,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- Total Users Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.users.end-users') }}" class="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-purple-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full"></div>
@@ -124,10 +124,10 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 
     <!-- Total Categories Card -->
-    <div class="group relative overflow-hidden bg-gradient-to-br from-pink-500 to-pink-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
+    <a href="{{ route('admin.categories.index') }}" class="group relative overflow-hidden bg-gradient-to-br from-pink-500 to-pink-700 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 block">
         <div class="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
         <div class="absolute -right-4 -top-4 w-14 h-14 bg-white/10 rounded-full"></div>
         <div class="relative p-3 md:p-4">
@@ -141,5 +141,5 @@
                 </div>
             </div>
         </div>
-    </div>
+    </a>
 </div>

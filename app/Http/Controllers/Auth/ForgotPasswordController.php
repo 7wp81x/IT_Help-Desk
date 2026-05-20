@@ -23,30 +23,87 @@ class ForgotPasswordController extends Controller
 
     use SendsPasswordResetEmails;
 
+    public function showLinkRequestForm()
+    {
+        return view('welcome')->with('showForgotModal', true);
+    }
+
     /**
      * Override to prevent reset links for unverified email addresses and restrict by role.
      */
     public function sendResetLinkEmail(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        $request->validate([
+            'email' => 'nullable|email|max:255',
+            'phone' => 'nullable|string|max:50',
+            'confirm' => 'nullable|in:1',
+        ], [
+            'email.email' => 'Please enter a valid email address.',
+            'email.max' => 'Email cannot be longer than 255 characters.',
+            'phone.max' => 'Phone number cannot be longer than 50 characters.',
+        ]);
 
-        $user = User::where('email', $request->input('email'))->first();
-
-        // Check if user exists and email is verified
-        if (! $user || ! $user->email_verified_at) {
-            return $this->sendResetLinkFailedResponse($request, Password::INVALID_USER);
+        if (!$request->filled('email') && !$request->filled('phone')) {
+            return back()
+                ->withInput()
+                ->withErrors(['email' => 'Please provide either your email address or phone number.'], 'forgot')
+                ->with('showForgotModal', true);
         }
 
-        // For agents: must have real email (not admin email)
-        if ($user->hasRole('agent')) {
-            // You can add additional checks here if needed to verify it's a real email
-            // For now, agents with verified emails can reset passwords
-        }
-        // For endusers and admins: restrict password reset
-        elseif ($user->hasRole('admin') || $user->role === 'user') {
-            return $this->sendResetLinkFailedResponse($request, Password::INVALID_USER);
+        $user = null;
+        $method = 'mail';
+
+        if ($request->filled('email')) {
+            $user = User::where('email', $request->email)->first();
+            $method = 'mail';
+        } elseif ($request->filled('phone')) {
+            $phone = User::normalizePhilippinesPhone($request->phone);
+            $user = $phone ? User::where('phone', $phone)->first() : null;
+            $method = 'sms';
         }
 
-        return parent::sendResetLinkEmail($request);
+        $notFoundMessage = 'Sorry, we can’t find your account with that email or phone number.';
+
+        if (!$user || ($method === 'mail' && !$user->email_verified_at)) {
+            return back()
+                ->withInput()
+                ->withErrors(['email' => $notFoundMessage], 'forgot')
+                ->with('showForgotModal', true);
+        }
+
+        if (!$request->filled('confirm')) {
+            return back()
+                ->withInput()
+                ->with([
+                    'showForgotModal' => true,
+                    'forgotStep' => 'verify',
+                    'foundUser' => [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'avatar_url' => $user->avatar_url,
+                        'method' => $method,
+                    ],
+                ]);
+        }
+
+        $token = Password::createToken($user);
+        $user->notify(new \App\Notifications\ResetPasswordLink($token, $method));
+
+        return $this->sendResetLinkResponse($request, Password::RESET_LINK_SENT);
+    }
+
+    protected function sendResetLinkResponse(Request $request, $response)
+    {
+        return redirect()->back()
+            ->with('status', trans($response))
+            ->with('showForgotModal', true);
+    }
+
+    protected function sendResetLinkFailedResponse(Request $request, $response)
+    {
+        return redirect()->back()
+            ->withInput($request->only('identifier'))
+            ->withErrors(['identifier' => trans($response)], 'forgot')
+            ->with('showForgotModal', true);
     }
 }

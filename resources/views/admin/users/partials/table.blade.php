@@ -21,7 +21,11 @@
                 @forelse($users as $user)
                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-all duration-200 group">
                     <td class="px-4 py-4">
-                        <input type="checkbox" class="user-checkbox appearance-none w-4 h-4 bg-transparent dark:bg-transparent border-2 border-gray-400 dark:border-gray-500 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-150 hover:border-gray-500 dark:hover:border-gray-400 checked:bg-transparent checked:border-red-500 relative after:content-['✓'] after:text-red-500 after:text-[10px] after:font-bold after:absolute after:hidden checked:after:block after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2" value="{{ $user->id }}">
+                        <input type="checkbox" 
+                               class="user-checkbox appearance-none w-4 h-4 bg-transparent dark:bg-transparent border-2 border-gray-400 dark:border-gray-500 rounded focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all duration-150 hover:border-gray-500 dark:hover:border-gray-400 checked:bg-transparent checked:border-red-500 relative after:content-['✓'] after:text-red-500 after:text-[10px] after:font-bold after:absolute after:hidden checked:after:block after:left-1/2 after:top-1/2 after:-translate-x-1/2 after:-translate-y-1/2" 
+                               value="{{ $user->id }}"
+                               data-role="{{ $user->role }}"
+                               data-is-approved-agent="{{ $user->role === 'agent' && $user->agentApplication && $user->agentApplication->status === 'approved' ? 'true' : 'false' }}">
                     </td>
                     <td class="px-6 py-4">
                         <div class="flex items-center gap-3">

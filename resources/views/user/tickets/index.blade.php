@@ -29,8 +29,8 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-6">
+        <a href="{{ route('user.tickets.index') }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Total Tickets</p>
@@ -41,9 +41,9 @@
                     <i class="bi bi-ticket-detailed text-blue-600 dark:text-blue-400 text-xl"></i>
                 </div>
             </div>
-        </div>
+        </a>
         
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+        <a href="{{ route('user.tickets.index', ['status' => 'open']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Open</p>
@@ -54,9 +54,22 @@
                     <i class="bi bi-envelope-open text-yellow-600 dark:text-yellow-400 text-xl"></i>
                 </div>
             </div>
-        </div>
+        </a>
+
+        <a href="{{ route('user.tickets.index', ['status' => 'pending']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Pending</p>
+                    <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 stat-pending">{{ $stats['pending'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Waiting for update</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                    <i class="bi bi-clock text-orange-600 dark:text-orange-400 text-xl"></i>
+                </div>
+            </div>
+        </a>
         
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+        <a href="{{ route('user.tickets.index', ['status' => 'in_progress']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">In Progress</p>
@@ -67,20 +80,46 @@
                     <i class="bi bi-arrow-repeat text-purple-600 dark:text-purple-400 text-xl"></i>
                 </div>
             </div>
-        </div>
+        </a>
         
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+        <a href="{{ route('user.tickets.index', ['status' => 'resolved']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Resolved/Closed</p>
-                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 stat-resolved">{{ ($stats['resolved'] ?? 0) + ($stats['closed'] ?? 0) }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Resolved</p>
+                    <p class="text-3xl font-bold text-green-600 dark:text-green-400 stat-resolved">{{ $stats['resolved'] ?? 0 }}</p>
                     <p class="text-xs text-gray-400 mt-1">Completed</p>
                 </div>
                 <div class="w-12 h-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
                     <i class="bi bi-check-circle text-green-600 dark:text-green-400 text-xl"></i>
                 </div>
             </div>
-        </div>
+        </a>
+
+        <a href="{{ route('user.tickets.index', ['status' => 'closed']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Closed</p>
+                    <p class="text-3xl font-bold text-gray-600 dark:text-gray-400 stat-closed">{{ $stats['closed'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Archived</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                    <i class="bi bi-archive text-gray-600 dark:text-gray-400 text-xl"></i>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ route('user.tickets.index', ['status' => 'canceled']) }}" class="block bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Canceled</p>
+                    <p class="text-3xl font-bold text-red-600 dark:text-red-400 stat-canceled">{{ $stats['canceled'] ?? 0 }}</p>
+                    <p class="text-xs text-gray-400 mt-1">Canceled</p>
+                </div>
+                <div class="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <i class="bi bi-x-circle text-red-600 dark:text-red-400 text-xl"></i>
+                </div>
+            </div>
+        </a>
     </div>
 
     <!-- Filter Bar -->
@@ -103,9 +142,11 @@
                         <select id="statusFilter" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
                             <option value="all">All Status</option>
                             <option value="open">Open</option>
+                            <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
                             <option value="resolved">Resolved</option>
                             <option value="closed">Closed</option>
+                            <option value="canceled">Canceled</option>
                         </select>
                     </div>
                 </div>
@@ -118,7 +159,19 @@
                             <option value="low">Low</option>
                             <option value="medium">Medium</option>
                             <option value="high">High</option>
-                            <option value="critical">Critical</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="w-[140px]">
+                    <div class="relative">
+                        <i class="bi bi-tag absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                        <select id="categoryFilter" class="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white cursor-pointer">
+                            <option value="">All Categories</option>
+                            @foreach(\App\Models\Category::all() as $category)
+                                <option value="{{ $category->id }}">{{ $category->name }}</option>
+                            @endforeach
                         </select>
                     </div>
                 </div>
@@ -172,6 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
     const priorityFilter = document.getElementById('priorityFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
     const resetBtn = document.getElementById('resetFilters');
     const loadingIndicator = document.getElementById('loadingIndicator');
     const tableContainer = document.getElementById('tableContainer');
@@ -182,15 +236,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateStats(data) {
         const statTotal = document.querySelector('.stat-total');
         const statOpen = document.querySelector('.stat-open');
+        const statPending = document.querySelector('.stat-pending');
         const statProgress = document.querySelector('.stat-progress');
         const statResolved = document.querySelector('.stat-resolved');
+        const statClosed = document.querySelector('.stat-closed');
+        const statCanceled = document.querySelector('.stat-canceled');
         
-        if (statTotal && data.stats?.total) statTotal.textContent = data.stats.total;
-        if (statOpen && data.stats?.open) statOpen.textContent = data.stats.open;
-        if (statProgress && data.stats?.in_progress) statProgress.textContent = data.stats.in_progress;
-        if (statResolved && data.stats?.resolved && data.stats?.closed) {
-            statResolved.textContent = data.stats.resolved + data.stats.closed;
-        }
+        if (statTotal && data.stats?.total !== undefined) statTotal.textContent = data.stats.total;
+        if (statOpen && data.stats?.open !== undefined) statOpen.textContent = data.stats.open;
+        if (statPending && data.stats?.pending !== undefined) statPending.textContent = data.stats.pending;
+        if (statProgress && data.stats?.in_progress !== undefined) statProgress.textContent = data.stats.in_progress;
+        if (statResolved && data.stats?.resolved !== undefined) statResolved.textContent = data.stats.resolved;
+        if (statClosed && data.stats?.closed !== undefined) statClosed.textContent = data.stats.closed;
+        if (statCanceled && data.stats?.canceled !== undefined) statCanceled.textContent = data.stats.canceled;
     }
     
     function fetchTickets() {
@@ -201,6 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
             search: searchInput?.value || '',
             status: statusFilter?.value || 'all',
             priority: priorityFilter?.value || 'all',
+            category: categoryFilter?.value || '',
             ajax: 1
         });
         
@@ -232,12 +291,14 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (statusFilter) statusFilter.addEventListener('change', fetchTickets);
     if (priorityFilter) priorityFilter.addEventListener('change', fetchTickets);
+    if (categoryFilter) categoryFilter.addEventListener('change', fetchTickets);
     
     if (resetBtn) {
         resetBtn.addEventListener('click', function() {
             if (searchInput) searchInput.value = '';
             if (statusFilter) statusFilter.value = 'all';
             if (priorityFilter) priorityFilter.value = 'all';
+            if (categoryFilter) categoryFilter.value = '';
             fetchTickets();
         });
     }

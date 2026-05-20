@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 
@@ -26,7 +27,14 @@ class AgentController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:8',
+            'phone' => ['nullable', 'string', 'max:20', 'philippine_phone'],
         ]);
+
+        $departmentId = $request->input('department_id');
+        if (empty($departmentId) && $request->filled('department')) {
+            $department = Department::where('name', $request->input('department'))->first();
+            $departmentId = $department ? $department->id : null;
+        }
 
         User::create([
             'name' => $request->name,
@@ -35,7 +43,7 @@ class AgentController extends Controller
             'phone' => $request->phone,
             'role' => 'agent',
             'status' => 'active',
-            'department' => $request->department,
+            'department_id' => $departmentId,
         ]);
 
         return redirect()->route('admin.agents.index')->with('success', 'Agent created successfully!');
@@ -54,6 +62,7 @@ class AgentController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,'.$id,
+            'phone' => ['nullable', 'string', 'max:20', 'philippine_phone'],
         ]);
 
         $agent->update([

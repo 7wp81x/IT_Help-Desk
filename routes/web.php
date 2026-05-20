@@ -5,13 +5,13 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Auth\ConfirmPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\Api\CategoryController as ApiCategoryController;
 use App\Http\Controllers\Api\TicketController as ApiTicketController;
-use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\AgentApplicationController;
@@ -20,7 +20,6 @@ use App\Models\User;
 
 // ========== IMPORT NEW CONTROLLERS ==========
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AgentUserController;
 use App\Http\Controllers\Admin\EndUserController;
 use App\Http\Controllers\Agent\ProfileController as AgentProfileController;
@@ -44,10 +43,9 @@ Route::get('/apply/agent', [AgentApplicationController::class, 'showForm'])->nam
 Route::post('/apply/agent', [AgentApplicationController::class, 'submit'])->name('agent.application.submit');
 Route::get('/apply/success', [AgentApplicationController::class, 'success'])->name('application.success');
 
-// Pending approval route
-Route::get('/pending-approval', function () {
-    return view('agent.pending');
-})->name('pending-approval');
+// Application Status Check Routes
+Route::get('/check-application-status', [App\Http\Controllers\ApplicationStatusController::class, 'showForm'])->name('application.status.form');
+Route::post('/check-application-status', [App\Http\Controllers\ApplicationStatusController::class, 'check'])->name('application.status.check');
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -73,21 +71,25 @@ Route::prefix('v1')->group(function () {
 
 // ========== AUTHENTICATED ROUTES ==========
 Route::middleware('auth')->group(function () {
-    // Email verification routes
-    Route::get('/email/verify', [VerificationController::class, 'show'])->name('verification.notice');
-    Route::get('/email/verify/{id}/{hash}', [VerificationController::class, 'verify'])->name('verification.verify');
-    Route::post('/email/resend', [VerificationController::class, 'resend'])->name('verification.resend');
+    // Email verification routes (code-based)
+    Route::get('/email/verify', [VerificationController::class, 'showCodeForm'])->name('verification.notice');
+    Route::post('/email/verify-code', [VerificationController::class, 'verifyCode'])->name('verification.verify-code');
+    Route::post('/email/resend', [VerificationController::class, 'resendCode'])->name('verification.resend');
+
+    // Password confirmation routes
+    Route::get('/password/confirm', [ConfirmPasswordController::class, 'showConfirmForm'])->name('password.confirm');
+    Route::post('/password/confirm', [ConfirmPasswordController::class, 'confirm'])->name('password.confirm.store');
 });
 
 // ========== AUTHENTICATED USER ROUTES ==========
 Route::middleware('auth')->group(function () {
     // Logout
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
-    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications');
-
+  
     // Profile redirector based on user role
     Route::get('/profile', function () {
         $user = auth()->user();
+
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.profile');
         } elseif ($user->hasRole('agent')) {
@@ -100,6 +102,7 @@ Route::middleware('auth')->group(function () {
     // Profile password redirector
     Route::get('/profile/password', function () {
         $user = auth()->user();
+
         if ($user->hasRole('admin')) {
             return redirect()->route('admin.profile.password');
         } elseif ($user->hasRole('agent')) {
@@ -127,27 +130,39 @@ Route::middleware('auth')->group(function () {
         Route::get('/create', [App\Http\Controllers\User\TicketController::class, 'create'])->name('create');
         Route::post('/', [App\Http\Controllers\User\TicketController::class, 'store'])->name('store');
         Route::get('/{ticket}', [App\Http\Controllers\User\TicketController::class, 'show'])->name('show');
+        Route::get('/{ticket}/edit', [App\Http\Controllers\User\TicketController::class, 'edit'])->name('edit');
+        Route::put('/{ticket}', [App\Http\Controllers\User\TicketController::class, 'update'])->name('update');
+        Route::delete('/{ticket}', [App\Http\Controllers\User\TicketController::class, 'destroy'])->name('destroy');
         Route::post('/{ticket}/comment', [App\Http\Controllers\User\TicketController::class, 'comment'])->name('comment');
-        Route::post('/{ticket}/status', [App\Http\Controllers\User\TicketController::class, 'updateStatus'])->name('update-status');
+        Route::patch('/{ticket}/status', [App\Http\Controllers\User\TicketController::class, 'updateStatus'])->name('update-status');
+        Route::post('/{ticket}/cancel', [App\Http\Controllers\User\TicketController::class, 'cancel'])->name('cancel');
         Route::post('/{ticket}/rate-agent', [App\Http\Controllers\User\TicketController::class, 'rateAgent'])->name('rate-agent');
         Route::get('/attachment/{attachment}/download', [App\Http\Controllers\User\TicketController::class, 'downloadAttachment'])->name('download');
         Route::get('/export/csv', [App\Http\Controllers\User\TicketController::class, 'exportCSV'])->name('export-csv');
+        // Real-time and message management routes
+        Route::delete('/comment/{comment}', [App\Http\Controllers\User\TicketController::class, 'deleteComment'])->name('comment.delete');
+        Route::post('/{ticket}/refresh-comments', [App\Http\Controllers\User\TicketController::class, 'refreshComments'])->name('refresh-comments');
+        Route::post('/comment/{comment}/mark-read', [App\Http\Controllers\User\TicketController::class, 'markNotificationRead'])->name('comment.mark-read');
+        Route::get('/unread-count', [App\Http\Controllers\User\TicketController::class, 'getUnreadCount'])->name('unread-count');
     });
 
     // ========== USER OTHER ROUTES ==========
     Route::prefix('user')->name('user.')->group(function () {
         Route::get('/agents', [App\Http\Controllers\User\AgentController::class, 'index'])->name('agents');
         Route::get('/agents/{agent}', [App\Http\Controllers\User\AgentController::class, 'show'])->name('agents.show');
-        Route::get('/knowledgebase', [App\Http\Controllers\User\KnowledgeBaseController::class, 'index'])->name('knowledgebase');
-        Route::get('/knowledgebase/{article}', [App\Http\Controllers\User\KnowledgeBaseController::class, 'show'])->name('knowledgebase.show');
-        Route::get('/announcements', [App\Http\Controllers\User\AnnouncementController::class, 'index'])->name('announcements');
-        Route::get('/announcements/{announcement}', [App\Http\Controllers\User\AnnouncementController::class, 'show'])->name('announcements.show');
-        Route::post('/announcements/{announcement}/read', [App\Http\Controllers\User\AnnouncementController::class, 'markAsRead'])->name('announcements.read');
+        // KnowledgeBase routes removed
         Route::get('/support', [App\Http\Controllers\User\SupportController::class, 'index'])->name('support');
         Route::get('/ratings', [App\Http\Controllers\User\RatingController::class, 'index'])->name('ratings');
         Route::get('/ratings/{rating}/edit', [App\Http\Controllers\User\RatingController::class, 'edit'])->name('ratings.edit');
         Route::put('/ratings/{rating}', [App\Http\Controllers\User\RatingController::class, 'update'])->name('ratings.update');
         Route::delete('/ratings/{rating}', [App\Http\Controllers\User\RatingController::class, 'destroy'])->name('ratings.destroy');
+
+
+         // ========== USER NOTIFICATIONS ==========
+        Route::get('/notifications', [App\Http\Controllers\User\UserNotificationController::class, 'index'])->name('notifications');
+        Route::get('/notifications/{notification}', [App\Http\Controllers\User\UserNotificationController::class, 'show'])->name('notifications.show');
+        Route::post('/notifications/mark-all-read', [App\Http\Controllers\User\UserNotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::post('/notifications/delete-all', [App\Http\Controllers\User\UserNotificationController::class, 'deleteAll'])->name('notifications.delete-all');
 
         // ========== USER PROFILE ROUTES ==========
         Route::get('/profile', [App\Http\Controllers\User\ProfileController::class, 'index'])->name('profile');
@@ -163,16 +178,36 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::prefix('agent')->name('agent.')->middleware('role:agent')->group(function () {
-        Route::get('/dashboard', [App\Http\Controllers\Agent\DashboardController::class, 'index'])->name('dashboard');
-        Route::prefix('tickets')->name('tickets.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Agent\TicketController::class, 'index'])->name('index');
+              Route::get('/dashboard', [App\Http\Controllers\Agent\DashboardController::class, 'index'])->name('dashboard');
+              Route::prefix('tickets')->name('tickets.')->group(function () {
+            // Literal routes must come before parametric routes
+            Route::get('/create', [App\Http\Controllers\Agent\TicketController::class, 'create'])->name('create');
+            Route::post('/', [App\Http\Controllers\Agent\TicketController::class, 'store'])->name('store');
             Route::get('/assigned', [App\Http\Controllers\Agent\TicketController::class, 'assigned'])->name('assigned');
             Route::get('/in-progress', [App\Http\Controllers\Agent\TicketController::class, 'inProgress'])->name('in-progress');
             Route::get('/resolved', [App\Http\Controllers\Agent\TicketController::class, 'resolved'])->name('resolved');
-            Route::get('/{ticket}', [App\Http\Controllers\Agent\TicketController::class, 'show'])->name('show');
-            Route::post('/{ticket}/comment', [App\Http\Controllers\Agent\TicketController::class, 'comment'])->name('comment');
-            Route::post('/{ticket}/status', [App\Http\Controllers\Agent\TicketController::class, 'updateStatus'])->name('update-status');
+            Route::get('/closed', [App\Http\Controllers\Agent\TicketController::class, 'closed'])->name('closed');
+            
+            // ========== AGENT NOTIFICATIONS ==========
+            Route::get('/notifications', [App\Http\Controllers\Agent\AgentNotificationController::class, 'index'])->name('notifications');
+            Route::get('/notifications/{notification}', [App\Http\Controllers\Agent\AgentNotificationController::class, 'show'])->name('notifications.show');
+            Route::post('/notifications/mark-all-read', [App\Http\Controllers\Agent\AgentNotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+            Route::post('/notifications/delete-all', [App\Http\Controllers\Agent\AgentNotificationController::class, 'deleteAll'])->name('notifications.delete-all');
+            
+
+            // Parametric routes
             Route::get('/attachment/{attachment}/download', [App\Http\Controllers\Agent\TicketController::class, 'downloadAttachment'])->name('download');
+            Route::post('/{ticket}/comment', [App\Http\Controllers\Agent\TicketController::class, 'comment'])->name('comment');
+            Route::patch('/{ticket}/status', [App\Http\Controllers\Agent\TicketController::class, 'updateStatus'])->name('update-status');
+            Route::get('/{ticket}', [App\Http\Controllers\Agent\TicketController::class, 'show'])->name('show');
+            // Real-time and message management routes
+            Route::delete('/comment/{comment}', [App\Http\Controllers\Agent\TicketController::class, 'deleteComment'])->name('comment.delete');
+            Route::post('/{ticket}/refresh-comments', [App\Http\Controllers\Agent\TicketController::class, 'refreshComments'])->name('refresh-comments');
+            Route::post('/comment/{comment}/mark-read', [App\Http\Controllers\Agent\TicketController::class, 'markNotificationRead'])->name('comment.mark-read');
+            Route::get('/unread-count', [App\Http\Controllers\Agent\TicketController::class, 'getUnreadCount'])->name('unread-count');
+            
+            // Index route last
+            Route::get('/', [App\Http\Controllers\Agent\TicketController::class, 'index'])->name('index');
         });
 
         // ========== AGENT PROFILE ROUTES ==========
@@ -182,6 +217,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/profile/password', [AgentProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::post('/profile/avatar', [AgentProfileController::class, 'uploadAvatar'])->name('profile.avatar');
         Route::delete('/profile/avatar', [AgentProfileController::class, 'removeAvatar'])->name('profile.avatar.remove');
+
+
+    
     });
     
     // ========== ADMIN ROUTES GROUP ==========
@@ -194,25 +232,35 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
         Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
         Route::post('/users', [UserController::class, 'store'])->name('users.store');
-        
-        // Admins Tab (route name: admin.users.admins)
-        Route::get('/users/admins', [AdminUserController::class, 'index'])->name('users.admins');
-        
-        // Admin Features
-        Route::get('/users/admins/permissions/{admin?}', [AdminUserController::class, 'permissions'])->name('users.admins.permissions');
-        Route::put('/users/admins/permissions/{admin}', [AdminUserController::class, 'updatePermissions'])->name('users.admins.permissions.update');
-        Route::get('/users/admins/audit-logs', [AdminUserController::class, 'auditLogs'])->name('users.admins.audit-logs');
-        Route::get('/users/admins/system-settings', [AdminUserController::class, 'systemSettings'])->name('users.admins.system-settings');
-        Route::get('/users/admins/team-view', [AdminUserController::class, 'teamView'])->name('users.admins.team-view');
-        
+      
         // Agents Tab (route name: admin.users.agents)
         Route::get('/users/agents', [AgentUserController::class, 'index'])->name('users.agents');
         
+            // ========== ADMIN NOTIFICATIONS ==========
+        Route::get('/notifications', [App\Http\Controllers\Admin\AdminNotificationController::class, 'index'])->name('notifications');
+        Route::get('/notifications/{notification}', [App\Http\Controllers\Admin\AdminNotificationController::class, 'show'])->name('notifications.show');
+        Route::post('/notifications/mark-all-read', [App\Http\Controllers\Admin\AdminNotificationController::class, 'markAllRead'])->name('notifications.mark-all-read');
+        Route::post('/notifications/delete-all', [App\Http\Controllers\Admin\AdminNotificationController::class, 'deleteAll'])->name('notifications.delete-all');
+        // Mark single notification as read via AJAX
+        Route::post('/admin/notifications/{id}/mark-read', function ($id) {
+            $notification = auth()->user()->notifications()->find($id);
+            if ($notification && !$notification->read_at) {
+            $notification->markAsRead();}return response()->json(['success' => true]);})->name('admin.notifications.mark-read-ajax');
+
+        // Get unread count for AJAX
+        Route::get('/admin/notifications/unread-count', function () { return response()->json(['unread_count' => auth()->user()->unreadNotifications->count()]);})->name('admin.notifications.unread-count');
+
+
         // Agent Features
         Route::get('/users/agents/assignments', [AgentUserController::class, 'assignments'])->name('users.agents.assignments');
         Route::get('/users/agents/performance', [AgentUserController::class, 'performance'])->name('users.agents.performance');
         Route::get('/users/agents/schedule', [AgentUserController::class, 'schedule'])->name('users.agents.schedule');
         Route::get('/users/agents/team-view', [AgentUserController::class, 'teamView'])->name('users.agents.team-view');
+        
+        // Pending Agent Registrations (route name: admin.users.pending-agents)
+        Route::get('/users/pending-agents', [UserController::class, 'pendingAgents'])->name('users.pending-agents');
+        Route::post('/users/{user}/approve-pending-agent', [UserController::class, 'approvePendingAgent'])->name('users.approve-pending-agent');
+        Route::post('/users/{user}/reject-pending-agent', [UserController::class, 'rejectPendingAgent'])->name('users.reject-pending-agent');
         
         // End Users Tab (route name: admin.users.end-users)
         Route::get('/users/end-users', [EndUserController::class, 'index'])->name('users.end-users');
@@ -242,8 +290,13 @@ Route::middleware('auth')->group(function () {
         Route::delete('/departments/{id}', [DepartmentController::class, 'destroy'])->name('departments.destroy');
         Route::delete('/departments/{id}/ajax', [DepartmentController::class, 'destroyAjax'])->name('departments.destroy-ajax');
         Route::post('/departments/{id}/toggle', [DepartmentController::class, 'toggleStatus'])->name('departments.toggle');
+        // Return specializations for a department (used by admin modals via fetch)
+        Route::get('/departments/{id}/specializations', [DepartmentController::class, 'specializations'])->name('departments.specializations');
+        // Generate a unique employee ID for a department (used by admin modals)
+        Route::get('/departments/{id}/generate-employee-id', [DepartmentController::class, 'generateEmployeeId'])->name('departments.generate-employee-id');
 
         // ========== CATEGORY ROUTES ==========
+                Route::get('/categories/by-department', [CategoryController::class, 'getByDepartment'])->name('admin.categories.by-department');
         Route::delete('/categories/bulk-destroy', [CategoryController::class, 'bulkDestroy'])->name('categories.bulk-destroy');
         Route::post('/categories/bulk-destroy', [CategoryController::class, 'bulkDestroy']);
         Route::get('/categories', [CategoryController::class, 'index'])->name('categories.index');
@@ -253,6 +306,8 @@ Route::middleware('auth')->group(function () {
         Route::put('/categories/{id}', [CategoryController::class, 'update'])->name('categories.update');
         Route::delete('/categories/{id}', [CategoryController::class, 'destroy'])->name('categories.destroy');
         Route::post('/categories/{id}/toggle', [CategoryController::class, 'toggleStatus'])->name('categories.toggle');
+
+        // Admin knowledgebase routes removed
 
         // ========== ADMIN PROFILE ROUTES ==========
         Route::get('/profile', [App\Http\Controllers\Admin\ProfileController::class, 'index'])->name('profile');
@@ -265,8 +320,12 @@ Route::middleware('auth')->group(function () {
         // ========== ADMIN APPLICATION ROUTES ==========
         Route::get('/applications', [AgentApplicationController::class, 'index'])->name('applications');
         Route::get('/applications/{application}', [AgentApplicationController::class, 'show'])->name('applications.show');
+        Route::get('/applications/{application}/view/{fileType}', [AgentApplicationController::class, 'viewFile'])->name('applications.view');
+        Route::get('/applications/{application}/download/{fileType}', [AgentApplicationController::class, 'downloadFile'])->name('applications.download');
         Route::post('/applications/{application}/approve', [AgentApplicationController::class, 'approve'])->name('applications.approve');
         Route::post('/applications/{application}/reject', [AgentApplicationController::class, 'reject'])->name('applications.reject');
+        Route::post('/applications/cleanup-orphaned', [AgentApplicationController::class, 'cleanupOrphaned'])->name('applications.cleanup-orphaned');
+        Route::delete('/applications/bulk-destroy', [AgentApplicationController::class, 'bulkDestroy'])->name('applications.bulk-destroy');
         Route::delete('/applications/{application}', [AgentApplicationController::class, 'destroy'])->name('applications.destroy');
         
         // ========== ADMIN TICKET ROUTES ==========
@@ -289,6 +348,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/{id}/assign', [App\Http\Controllers\Admin\TicketController::class, 'assign'])->name('assign');
             Route::post('/{id}/priority', [App\Http\Controllers\Admin\TicketController::class, 'updatePriority'])->name('update-priority');
             Route::post('/{id}/status', [App\Http\Controllers\Admin\TicketController::class, 'updateStatus'])->name('update-status');
+            Route::post('/{id}/cancel', [App\Http\Controllers\Admin\TicketController::class, 'cancel'])->name('cancel');
             Route::post('/{id}/escalate', [App\Http\Controllers\Admin\TicketController::class, 'escalate'])->name('escalate');
             Route::get('/attachment/{attachment}/download', [App\Http\Controllers\Admin\TicketController::class, 'downloadAttachment'])->name('download');
             Route::delete('/attachment/{attachment}', [App\Http\Controllers\Admin\TicketController::class, 'deleteAttachment'])->name('delete-attachment');
@@ -297,6 +357,11 @@ Route::middleware('auth')->group(function () {
             Route::post('/bulk/delete', [App\Http\Controllers\Admin\TicketController::class, 'bulkDelete'])->name('bulk.delete');
             Route::get('/export/csv', [App\Http\Controllers\Admin\TicketController::class, 'exportCSV'])->name('export.csv');
             Route::get('/export/pdf', [App\Http\Controllers\Admin\TicketController::class, 'exportPDF'])->name('export.pdf');
+            // Real-time and message management routes
+            Route::delete('/comment/{comment}', [App\Http\Controllers\Admin\TicketController::class, 'deleteComment'])->name('comment.delete');
+            Route::post('/{id}/refresh-comments', [App\Http\Controllers\Admin\TicketController::class, 'refreshComments'])->name('refresh-comments');
+            Route::post('/comment/{comment}/mark-read', [App\Http\Controllers\Admin\TicketController::class, 'markNotificationRead'])->name('comment.mark-read');
+            Route::get('/unread-count', [App\Http\Controllers\Admin\TicketController::class, 'getUnreadCount'])->name('unread-count');
         });
         
         Route::get('/reports', [App\Http\Controllers\Admin\ReportController::class, 'index'])->name('reports.index');

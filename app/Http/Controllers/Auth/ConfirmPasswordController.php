@@ -21,11 +21,21 @@ class ConfirmPasswordController extends Controller
     use ConfirmsPasswords;
 
     /**
+     * Display the password confirmation view.
+     *
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function showConfirmForm()
+    {
+        return redirect()->route('welcome');
+    }
+
+    /**
      * Where to redirect users when the intended url fails.
      *
      * @var string
      */
-    protected $redirectTo = '/home';
+    protected $redirectTo = '/dashboard';
 
     /**
      * Create a new controller instance.

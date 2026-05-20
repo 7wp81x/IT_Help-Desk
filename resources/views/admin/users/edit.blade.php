@@ -71,6 +71,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
                     <input type="text" name="phone" value="{{ old('phone', $user->phone) }}"
+                           placeholder="09XXXXXXXXX or +639XXXXXXXXX"
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
                     @error('phone') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
@@ -98,19 +99,43 @@
                     @error('position') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
                 
-                <!-- Specialization -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specialization</label>
-                    <input type="text" name="specialization" value="{{ old('specialization', $user->specialization) }}"
-                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
-                    @error('specialization') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
-                </div>
-                
-                <!-- Skills -->
-                <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skills</label>
-                    <textarea name="skills" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">{{ old('skills', $user->skills) }}</textarea>
-                    @error('skills') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <div id="agent-specific-fields">
+                    <!-- Specialization -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Specialization</label>
+                        <input type="text" name="specialization" value="{{ old('specialization', $user->specialization) }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        @error('specialization') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    
+                    <!-- Skills -->
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Skills</label>
+                        <textarea name="skills" rows="3" class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">{{ old('skills', $user->skills) }}</textarea>
+                        @error('skills') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mt-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Agent Schedule</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="flex items-center gap-2">
+                                <input id="day_off" name="day_off" type="checkbox" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {{ old('day_off', $user->day_off) ? 'checked' : '' }}>
+                                <label for="day_off" class="text-sm text-gray-700 dark:text-gray-300">Day Off</label>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift Start</label>
+                                <input type="time" name="shift_start" value="{{ old('shift_start', $user->shift_start) }}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                                @error('shift_start') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift End</label>
+                                <input type="time" name="shift_end" value="{{ old('shift_end', $user->shift_end) }}"
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                                @error('shift_end') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Status -->
@@ -121,6 +146,28 @@
                         <option value="inactive" {{ old('status', $user->status) == 'inactive' ? 'selected' : '' }}>Inactive</option>
                     </select>
                     @error('status') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-900/50 rounded-xl p-4 border border-gray-200 dark:border-gray-700 mt-6">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Agent Schedule</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="flex items-center gap-2">
+                        <input id="day_off" name="day_off" type="checkbox" value="1" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" {{ old('day_off', $user->day_off) ? 'checked' : '' }}>
+                        <label for="day_off" class="text-sm text-gray-700 dark:text-gray-300">Day Off</label>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift Start</label>
+                        <input type="time" name="shift_start" value="{{ old('shift_start', $user->shift_start) }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        @error('shift_start') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shift End</label>
+                        <input type="time" name="shift_end" value="{{ old('shift_end', $user->shift_end) }}"
+                               class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500">
+                        @error('shift_end') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </div>
             
@@ -136,4 +183,22 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleAgentFields(role) {
+    const agentFields = document.getElementById('agent-specific-fields');
+    if (!agentFields) return;
+    agentFields.style.display = role === 'agent' ? 'block' : 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const roleInput = document.querySelector('select[name="role"]');
+    if (roleInput) {
+        toggleAgentFields(roleInput.value);
+        roleInput.addEventListener('change', function () {
+            toggleAgentFields(this.value);
+        });
+    }
+});
+</script>
 @endsection

@@ -12,23 +12,33 @@
         </div>
     </div>
 
+    @if (session('success') && !session('open_verify_modal'))
+        <div class="mb-6 rounded-2xl border border-green-200/80 bg-green-50 dark:border-green-900/40 dark:bg-green-950/20 p-4 text-sm text-green-800 dark:text-green-200 shadow-sm">
+            <div class="flex items-center gap-3">
+                <i class="bi bi-check-circle-fill text-lg"></i>
+                <span>{{ session('success') }}</span>
+            </div>
+        </div>
+    @endif
+
     @if (!$user->email_verified_at)
         <div class="mb-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4 text-sm text-yellow-900 dark:text-yellow-100">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                     <p class="font-semibold">Email not verified</p>
-                    <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-200">Please verify your email to unlock full support features. If you didn&rsquo;t receive it, resend the verification email.</p>
+                    <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-200">Please verify your email to unlock full support features. Check your email for the verification code.</p>
                 </div>
-                <form method="POST" action="{{ route('verification.resend') }}" class="sm:inline-flex">
-                    @csrf
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-yellow-600 text-white px-4 py-2 text-sm font-medium hover:bg-yellow-700 transition">
-                        Resend verification email
+                <div class="sm:inline-flex">
+                    <button type="button" onclick="openVerifyModal()" class="inline-flex items-center justify-center rounded-lg bg-yellow-600 text-white px-4 py-2 text-sm font-medium hover:bg-yellow-700 transition">
+                        <i class="bi bi-pencil-square mr-2"></i>
+                        Enter Code
                     </button>
-                </form>
+                </div>
             </div>
         </div>
     @endif
 
+    @include('user.partials.email-verification-modal')
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column - Profile Info -->
         <div class="lg:col-span-1">
@@ -167,6 +177,7 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
                                 <input type="text" name="phone" 
+                                       placeholder="09XXXXXXXXX or +639XXXXXXXXX"
                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
                                        value="{{ old('phone', $user->phone) }}">
                             </div>
@@ -330,4 +341,5 @@ if (removeAvatarBtn) {
     });
 }
 </script>
+@include('user.partials.email-verification-modal-scripts')
 @endsection

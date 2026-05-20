@@ -93,6 +93,10 @@
                 </div>
             </div>
 
+            <div id="filterSummary" class="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                {{ request('status') === 'active' ? 'Filtering active categories only.' : (request('status') === 'inactive' ? 'Filtering inactive categories only.' : 'Showing all categories.') }}
+            </div>
+
             <div id="loadingIndicator" class="hidden mt-3 text-center">
                 <div class="inline-flex items-center gap-2 text-sm text-gray-500">
                     <div class="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
@@ -212,6 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadingIndicator = document.getElementById('loadingIndicator');
     const tableContainer = document.getElementById('tableContainer');
     const resultsCount = document.getElementById('resultsCount');
+    const filterSummary = document.getElementById('filterSummary');
 
     const deleteModal = document.getElementById('deleteModal');
     const deleteModalContent = document.getElementById('deleteModalContent');
@@ -246,6 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateBulkActionsBar() {
         const checkedBoxes = document.querySelectorAll('.category-checkbox:checked');
+        const totalCheckboxes = document.querySelectorAll('.category-checkbox').length;
         const count = checkedBoxes.length;
 
         if (count > 0) {
@@ -255,8 +261,8 @@ document.addEventListener('DOMContentLoaded', function() {
             bulkActionsBar.classList.add('hidden');
         }
 
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         if (selectAllCheckbox) {
-            const totalCheckboxes = document.querySelectorAll('.category-checkbox').length;
             selectAllCheckbox.checked = count > 0 && count === totalCheckboxes;
             selectAllCheckbox.indeterminate = count > 0 && count < totalCheckboxes;
         }
@@ -268,6 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cb.addEventListener('change', updateBulkActionsBar);
         });
 
+        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
         if (selectAllCheckbox) {
             selectAllCheckbox.removeEventListener('change', selectAllHandler);
             selectAllCheckbox.addEventListener('change', selectAllHandler);
@@ -282,14 +289,31 @@ document.addEventListener('DOMContentLoaded', function() {
         updateBulkActionsBar();
     }
 
-    function fetchCategories(url = null) {
-        loadingIndicator.classList.remove('hidden');
-        if (tableContainer) tableContainer.style.opacity = '0.5';
+    function updateFilterSummary(status) {
+        if (!filterSummary) return;
 
-        const targetUrl = url || window.location.pathname + '?' + new URLSearchParams({
-            search: searchInput?.value || '',
-            status: statusFilter?.value || 'all'
-        }).toString();
+        if (status === 'active') {
+            filterSummary.textContent = 'Filtering active categories only.';
+        } else if (status === 'inactive') {
+            filterSummary.textContent = 'Filtering inactive categories only.';
+        } else {
+            filterSummary.textContent = 'Showing all categories.';
+        }
+    }
+
+    function fetchCategories(url = null) {
+        if (url instanceof Event) {
+            url = null;
+        }
+
+        loadingIndicator.classList.remove('hidden');
+
+        const targetUrl = typeof url === 'string' && url.length > 0
+            ? url
+            : window.location.pathname + '?' + new URLSearchParams({
+                search: searchInput?.value || '',
+                status: statusFilter?.value || 'all'
+            }).toString();
 
         fetch(targetUrl, {
             headers: {
@@ -305,13 +329,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (tableContainer && data.table_html) {
-                tableContainer.innerHTML = data.table_html;
-                tableContainer.style.opacity = '1';
+                tableContainer.innerHTML = '<div class="min-w-[800px]">' + data.table_html + '</div>';
             }
 
             updateStats(data);
+            updateFilterSummary(statusFilter?.value || 'all');
             attachCheckboxListeners();
             updateBulkActionsBar();
+
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, '', targetUrl);
+            }
         })
         .catch(error => {
             console.error('Fetch Error:', error);
@@ -365,7 +393,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 .then(data => {
                     if (data.success) {
                         fetchCategories();
-                        updateStats(data.stats || {});
                     } else {
                         alert('Error: ' + (data.message || 'Unable to update status.'));
                     }
@@ -536,7 +563,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     if (statusFilter) {
-        statusFilter.addEventListener('change', fetchCategories);
+        statusFilter.addEventListener('change', function() {
+            fetchCategories();
+        });
     }
 
     if (resetBtn) {

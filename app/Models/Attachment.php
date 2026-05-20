@@ -14,6 +14,7 @@ class Attachment extends Model
     protected $fillable = [
         'ticket_id',
         'user_id',
+        'comment_id',
         'filename',
         'original_name',
         'mime_type',
@@ -29,6 +30,11 @@ class Attachment extends Model
     public function ticket()
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    public function comment()
+    {
+        return $this->belongsTo(Comment::class, 'comment_id');
     }
 
     public function user()

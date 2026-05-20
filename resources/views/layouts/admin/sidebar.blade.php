@@ -77,6 +77,25 @@
                     </a>
                 </li>
 
+                <!-- Notifications -->
+                <li>
+                    <a href="{{ route('admin.notifications') }}"
+                        class="flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200"
+                        :class="{
+                            'justify-center': sidebarCollapsed,
+                            'justify-start': !sidebarCollapsed,
+                            'bg-blue-600 text-white shadow-md': activeMenu === 'notifications',
+                            'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800': activeMenu !== 'notifications'
+                        }"
+                        @click="setActiveMenu('notifications')"
+                        @mouseenter="sidebarCollapsed ? showTooltip($event, 'Notifications') : null"
+                        @mouseleave="hideTooltip()">
+                        <i class="bi bi-bell text-xl" :class="{ 'text-white': activeMenu === 'notifications' }"></i>
+                        <span class="text-sm font-medium" :class="{ 'hidden': sidebarCollapsed }">Notifications</span>
+                        <span class="ml-auto inline-flex items-center rounded-full bg-red-100 px-2 py-1 text-[11px] font-semibold text-red-700 dark:bg-red-900/20 dark:text-red-200" :class="{ 'hidden': sidebarCollapsed }">{{ $notificationCount ?? 0 }}</span>
+                    </a>
+                </li>
+
                 <!-- Tickets Dropdown -->
                 <li x-data="{ ticketsOpen: false }" x-init="ticketsOpen = activeMenu === 'tickets'">
                     <button @click="ticketsOpen = !ticketsOpen; if(ticketsOpen) setActiveMenu('tickets')"
@@ -206,14 +225,7 @@
                         </li>
                         
                         <!-- Create New Ticket -->
-                        <li>
-                            <a href="{{ route('admin.tickets.create') }}"
-                                class="flex items-center gap-3 p-2 rounded-lg transition-all duration-200 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/30"
-                                @click="setActiveMenu('tickets'); setActiveSubMenu('create-ticket'); ticketsOpen = true">
-                                <i class="bi bi-plus-circle text-lg"></i>
-                                <span class="text-sm font-medium">Create Ticket</span>
-                            </a>
-                        </li>
+                       
                     </ul>
                 </li>
 
@@ -260,20 +272,7 @@
                 <span class="text-sm">All Users</span>
             </a>
         </li>
-        
-        <!-- Admins -->
-        <li>
-            <a href="{{ route('admin.users.admins') }}"
-                class="flex items-center gap-3 p-2 rounded-lg transition-all duration-200"
-                :class="{
-                    'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400': activeSubMenu === 'admins',
-                    'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800': activeSubMenu !== 'admins'
-                }"
-                @click="setActiveMenu('usermanagement'); setActiveSubMenu('admins'); userOpen = true">
-                <i class="bi bi-shield-lock text-lg"></i>
-                <span class="text-sm">Admins</span>
-            </a>
-        </li>
+      
         
         <!-- Agents -->
         <li>
@@ -341,6 +340,8 @@
                         <span class="text-sm font-medium" :class="{ 'hidden': sidebarCollapsed }">Categories</span>
                     </a>
                 </li>
+
+
 
                 <!-- Departments -->
                 <li>
@@ -538,6 +539,10 @@ function sidebarComponent() {
         this.activeSubMenu = null;
     } else if (currentPath.includes('/admin/categories')) {
         this.activeMenu = 'categories';
+
+   
+} else if (currentPath.includes('/notifications')) {
+        this.activeMenu = 'notifications';  
     } else if (currentPath.includes('/admin/departments')) {
         this.activeMenu = 'departments';
     } else if (currentPath.includes('/admin/reports')) {

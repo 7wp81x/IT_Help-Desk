@@ -23,6 +23,10 @@
             Welcome to the IT Helpdesk System as a Support Agent.
         </p>
 
+        <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 20px;">
+            You can now log in using your email address and password. Your Agent ID is shown below for your internal agent profile and verification.
+        </p>
+
         <!-- Agent ID Box -->
         <div style="background-color: #f3f4f6; border: 2px solid #2563eb; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
             <h2 style="color: #2563eb; font-size: 18px; margin: 0 0 10px 0; font-weight: bold;">
@@ -31,6 +35,9 @@
             <div style="font-size: 24px; font-weight: bold; color: #1f2937; font-family: monospace;">
                 {{ $user->employee_id }}
             </div>
+            <p style="margin-top: 15px; color: #475569; font-size: 14px; line-height: 1.6;">
+                This is your verification code. Use it together with your password to sign in after approval.
+            </p>
         </div>
 
         <!-- Department Info -->
@@ -57,17 +64,16 @@
                     Use the <strong>SAME PASSWORD</strong> you created during registration to log in.
                 </p>
             @endif
-            <div style="text-align: center; margin-top: 15px;">
-                <a href="{{ url('/login') }}" style="background-color: #2563eb; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
-                    Login to Your Dashboard
-                </a>
-            </div>
+            <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 20px;">
+                Use your registered email and password to sign in. After logging in, go to the agent dashboard to start handling tickets.
+            </p>
         </div>
 
         <!-- What to Expect -->
         <p style="font-size: 16px; line-height: 1.6; color: #374151; margin-bottom: 20px;">
             Once logged in, you'll have access to your agent dashboard where you can start handling customer tickets and providing excellent support.
         </p>
+
     </div>
 
     @if($user->phone)

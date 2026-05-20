@@ -10,17 +10,33 @@ class Department extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'description', 'is_active'
+        'name',
+        'slug',
+        'description',
+        'is_active',
     ];
 
-    // Relationship using the 'department' column in users table
-    public function users()
+    protected $casts = [
+        'is_active' => 'boolean',
+    ];
+
+    public function categories()
     {
-        return $this->hasMany(User::class, 'department', 'name');
+        return $this->hasMany(Category::class);
     }
 
     public function tickets()
     {
         return $this->hasMany(Ticket::class);
+    }
+
+    public function agents()
+    {
+        return $this->hasMany(User::class, 'department_id');
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'department_id');
     }
 }

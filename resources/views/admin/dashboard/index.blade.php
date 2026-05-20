@@ -3,17 +3,13 @@
 @section('title', 'Admin Dashboard')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
+{{-- Wider container: increased from max-w-7xl to max-w-[1600px] --}}
+<div class="w-full max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
     @include('admin.dashboard.partials.header')
     @include('admin.dashboard.partials.stats-cards')
     
-    
-    <!-- Analytics Sections -->
     @include('admin.dashboard.partials.ticket-volume-analytics')
-    @include('admin.dashboard.partials.agent-performance')
-    @include('admin.dashboard.partials.sla-compliance')
-    @include('admin.dashboard.partials.customer-satisfaction')
-    @include('admin.dashboard.partials.category-analytics')
+    
 </div>
 @endsection
 

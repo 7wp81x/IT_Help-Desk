@@ -90,6 +90,44 @@
                                    title="View Ticket">
                                     <i class="bi bi-eye text-sm"></i>
                                 </a>
+                                @if($ticket->status === 'in_progress')
+                                    <a href="{{ route('user.tickets.edit', $ticket) }}" 
+                                       class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-yellow-100 hover:text-yellow-600 dark:hover:bg-yellow-900/30 dark:hover:text-yellow-400 transition-all duration-200 flex items-center justify-center"
+                                       title="Edit Ticket">
+                                        <i class="bi bi-pencil text-sm"></i>
+                                    </a>
+                                    <form action="{{ route('user.tickets.destroy', $ticket) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this ticket? This action cannot be undone.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all duration-200 flex items-center justify-center"
+                                                title="Delete Ticket">
+                                            <i class="bi bi-trash text-sm"></i>
+                                        </button>
+                                    </form>
+                                @elseif($ticket->status === 'open')
+                                    <form action="{{ route('user.tickets.cancel', $ticket) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Canceling this ticket will close it and notify support. Continue?')">
+                                        @csrf
+                                        <button type="submit"
+                                                class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-orange-100 hover:text-orange-600 dark:hover:bg-orange-900/30 dark:hover:text-orange-400 transition-all duration-200 flex items-center justify-center"
+                                                title="Cancel Ticket">
+                                            <i class="bi bi-x-circle text-sm"></i>
+                                        </button>
+                                    </form>
+                                @elseif(in_array($ticket->status, ['resolved', 'closed', 'canceled']))
+                                    <form action="{{ route('user.tickets.destroy', $ticket) }}" method="POST" class="inline"
+                                          onsubmit="return confirm('Are you sure you want to delete this ticket? This action cannot be undone.')">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/30 dark:hover:text-red-400 transition-all duration-200 flex items-center justify-center"
+                                                title="Delete Ticket">
+                                            <i class="bi bi-trash text-sm"></i>
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </td>
                     </tr>

@@ -38,7 +38,7 @@ class ProfileController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $admin->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => ['nullable', 'string', 'max:20', 'philippine_phone'],
             'department' => 'nullable|string|max:255',
             'position' => 'nullable|string|max:255',
         ]);

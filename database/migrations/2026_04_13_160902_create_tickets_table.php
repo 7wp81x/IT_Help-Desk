@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
             $table->enum('priority', ['low', 'medium', 'high', 'urgent'])->default('medium');
-            $table->enum('status', ['open', 'in_progress', 'pending', 'resolved', 'closed'])->default('open');
+            $table->enum('status', ['open', 'in_progress', 'pending', 'resolved', 'closed', 'canceled'])->default('open');
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();

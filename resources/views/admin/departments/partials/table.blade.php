@@ -53,7 +53,7 @@
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
                             <i class="bi bi-people text-xs"></i>
-                            {{ $department->users_count ?? \App\Models\User::where('department', $department->name)->count() }} Users
+                            {{ $department->users()->where('role', 'agent')->count() }} Agents
                         </span>
                     </td>
                     <td class="px-6 py-4">

@@ -28,6 +28,15 @@
             </div>
         </div>
 
+        @if (session('success') && !session('open_verify_modal'))
+            <div class="mb-6 rounded-2xl border border-green-200/80 bg-green-50 dark:border-green-900/40 dark:bg-green-950/20 p-4 text-sm text-green-800 dark:text-green-200 shadow-sm">
+                <div class="flex items-center gap-3">
+                    <i class="bi bi-check-circle-fill text-lg"></i>
+                    <span>{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
         <!-- Stats Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6 border border-gray-200 dark:border-gray-700">
@@ -92,20 +101,19 @@
                                 Please verify your email address to access all features including ticket notifications and priority support.
                             </p>
                             <p class="text-xs text-amber-600 dark:text-amber-400 mt-1">
-                                <i class="bi bi-info-circle"></i> Check your inbox for the verification link.
+                                <i class="bi bi-info-circle"></i> Check your inbox for the verification code.
                             </p>
                         </div>
                     </div>
-                    <form method="POST" action="{{ route('verification.resend') }}" class="flex-shrink-0">
-                        @csrf
-                        <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 text-sm font-medium transition duration-200 shadow-sm hover:shadow">
-                            <i class="bi bi-envelope-paper"></i>
-                            Resend Verification Email
-                        </button>
-                    </form>
+                    <button type="button" onclick="openVerifyModal()" class="flex-shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 text-white px-5 py-2.5 text-sm font-medium transition duration-200 shadow-sm hover:shadow">
+                        <i class="bi bi-pencil-square"></i>
+                        Enter Verification Code
+                    </button>
                 </div>
             </div>
         @endif
+
+        @include('user.partials.email-verification-modal')
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Main Content -->
@@ -193,9 +201,7 @@
                         <a href="{{ route('user.tickets.index') }}" class="block w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 text-center font-medium">
                             <i class="bi bi-list mr-2"></i> View All Tickets
                         </a>
-                        <a href="{{ route('user.knowledgebase') }}" class="block w-full px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition duration-200 text-center font-medium">
-                            <i class="bi bi-journal mr-2"></i> Knowledge Base
-                        </a>
+                        <!-- Knowledge Base removed -->
                     </div>
                 </div>
 
@@ -219,11 +225,7 @@
                                 <i class="bi bi-people"></i> View Our Agents
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('user.announcements') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-2">
-                                <i class="bi bi-megaphone"></i> Announcements
-                            </a>
-                        </li>
+                    
                         <li>
                             <a href="{{ route('user.ratings') }}" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center gap-2">
                                 <i class="bi bi-star"></i> My Ratings
@@ -263,4 +265,5 @@
     updateDateTime();
     setInterval(updateDateTime, 1000);
 </script>
+@include('user.partials.email-verification-modal-scripts')
 @endsection

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Models\User;
+use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -66,15 +67,28 @@ class ProfileController extends \App\Http\Controllers\Controller
                 'max:255',
                 Rule::unique('users')->ignore($user->id),
             ],
-            'department' => 'nullable|string|max:100',
-            'phone' => 'nullable|string|max:20',
+            'department_id' => 'nullable|exists:departments,id',
+            'department' => 'nullable|string|max:255',
+            'phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                'philippine_phone',
+                Rule::unique('users', 'phone')->ignore($user->id),
+            ],
         ]);
+
+        if (empty($request->input('department_id')) && $request->filled('department')) {
+            $department = Department::where('name', $request->input('department'))->first();
+            $user->department_id = $department ? $department->id : null;
+        } else {
+            $user->department_id = $request->input('department_id');
+        }
 
         try {
             // Update user information
             $user->name = $request->name;
             $user->email = $request->email;
-            $user->department = $request->department;
             $user->phone = $request->phone;
             $user->save();
 

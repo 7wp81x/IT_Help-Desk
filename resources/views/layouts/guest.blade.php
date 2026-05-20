@@ -63,6 +63,7 @@
             overflow-x: hidden;
             margin: 0;
             padding: 20px 0; /* Added padding */
+            data-theme: light; /* Set default theme */
         }
         
         .auth-container {

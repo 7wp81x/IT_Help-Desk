@@ -6,28 +6,39 @@ use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class TicketController extends Controller
 {
     public function store(Request $request)
     {
+        if (! Auth::check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Authentication required to create a ticket.',
+            ], 401);
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'priority' => 'required|in:low,medium,high,urgent',
-            'submitted_by_name' => 'required|string|max:255',
-            'submitted_by_email' => 'required|email',
-            'submitted_by_phone' => 'nullable|string'
+            'priority' => 'nullable|in:low,medium,high,urgent',
         ]);
 
-        $ticket = Ticket::create($validated);
+        $ticket = Ticket::create([
+            'subject' => $validated['title'],
+            'description' => $validated['description'],
+            'priority' => $validated['priority'] ?? 'medium',
+            'user_id' => Auth::id(),
+            'status' => Ticket::STATUS_OPEN,
+            'ticket_number' => 'TKT-' . strtoupper(uniqid()),
+        ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Ticket created successfully',
             'ticket_number' => $ticket->ticket_number,
-            'ticket' => $ticket->load('category')
+            'ticket' => $ticket->load('category', 'department')
         ], 201);
     }
 

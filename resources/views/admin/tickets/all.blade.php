@@ -15,7 +15,7 @@
     </div>
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6" id="stats-container">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 mb-6" id="stats-container">
         <a href="{{ route('admin.tickets.all') }}" 
            class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all hover:scale-105 cursor-pointer group">
             <div class="flex items-center justify-between">
@@ -34,10 +34,23 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 dark:text-gray-400">Open</p>
-                    <p class="text-2xl font-bold text-yellow-600 mt-1 stat-open">{{ $stats['open'] ?? \App\Models\Ticket::where('status', 'open')->count() }}</p>
+                    <p class="text-2xl font-bold text-yellow-600 mt-1 stat-open">{{ $stats['open'] ?? \App\Models\Ticket::whereIn('status', ['open', 'assigned'])->count() }}</p>
                 </div>
                 <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800/50 transition-colors">
                     <i class="bi bi-envelope-open text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                </div>
+            </div>
+        </a>
+
+        <a href="{{ route('admin.tickets.all', ['status' => 'pending']) }}" 
+           class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all hover:scale-105 cursor-pointer group">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Pending</p>
+                    <p class="text-2xl font-bold text-orange-600 mt-1 stat-pending">{{ $stats['pending'] ?? \App\Models\Ticket::whereIn('status', ['pending', 'pending_user_response', 'pending_admin_approval'])->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center group-hover:bg-orange-200 dark:group-hover:bg-orange-800/50 transition-colors">
+                    <i class="bi bi-clock text-orange-600 dark:text-orange-400 text-xl"></i>
                 </div>
             </div>
         </a>
@@ -80,6 +93,19 @@
                 </div>
             </div>
         </a>
+
+        <a href="{{ route('admin.tickets.all', ['status' => 'canceled']) }}" 
+           class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all hover:scale-105 cursor-pointer group">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Canceled</p>
+                    <p class="text-2xl font-bold text-gray-600 mt-1 stat-canceled">{{ $stats['canceled'] ?? \App\Models\Ticket::where('status', 'canceled')->count() }}</p>
+                </div>
+                <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-xl flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-gray-600 transition-colors">
+                    <i class="bi bi-x-circle text-gray-600 dark:text-gray-400 text-xl"></i>
+                </div>
+            </div>
+        </a>
     </div>
 
     <!-- Single Filter Bar - All filters in one row -->
@@ -107,6 +133,7 @@
                             <option value="in_progress">In Progress</option>
                             <option value="resolved">Resolved</option>
                             <option value="closed">Closed</option>
+                            <option value="canceled">Canceled</option>
                         </select>
                     </div>
                 </div>
@@ -217,9 +244,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.stats) {
                 if (document.querySelector('.stat-total')) document.querySelector('.stat-total').textContent = data.stats.total;
                 if (document.querySelector('.stat-open')) document.querySelector('.stat-open').textContent = data.stats.open;
+                if (document.querySelector('.stat-pending')) document.querySelector('.stat-pending').textContent = data.stats.pending;
                 if (document.querySelector('.stat-progress')) document.querySelector('.stat-progress').textContent = data.stats.in_progress;
                 if (document.querySelector('.stat-resolved')) document.querySelector('.stat-resolved').textContent = data.stats.resolved;
                 if (document.querySelector('.stat-closed')) document.querySelector('.stat-closed').textContent = data.stats.closed;
+                if (document.querySelector('.stat-canceled')) document.querySelector('.stat-canceled').textContent = data.stats.canceled;
             }
             
             // Re-attach event handlers for new checkboxes

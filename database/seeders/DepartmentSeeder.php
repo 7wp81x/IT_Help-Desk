@@ -20,87 +20,51 @@ class DepartmentSeeder extends Seeder
 
         $departments = [
             [
-                'name' => 'Information Technology',
-                'description' => 'Responsible for IT infrastructure, software development, and technical support',
+                'name' => 'Technical Support',
+                'slug' => 'technical-support',
+                'description' => 'Handles technical issues, software bugs, hardware problems, and system errors.',
                 'is_active' => true,
             ],
             [
-                'name' => 'Human Resources',
-                'description' => 'Manages employee relations, recruitment, benefits, and company culture',
+                'name' => 'Network Operations',
+                'slug' => 'network-operations',
+                'description' => 'Manages network connectivity, VPN, WiFi, and firewall issues.',
                 'is_active' => true,
             ],
             [
-                'name' => 'Finance',
-                'description' => 'Handles financial planning, accounting, budgeting, and reporting',
+                'name' => 'Security Operations',
+                'slug' => 'security-operations',
+                'description' => 'Handles security incidents, access control, and compliance.',
                 'is_active' => true,
             ],
             [
-                'name' => 'Marketing',
-                'description' => 'Responsible for brand management, digital marketing, and customer acquisition',
+                'name' => 'Database Administration',
+                'slug' => 'database-administration',
+                'description' => 'Manages databases, performance, and data integrity.',
                 'is_active' => true,
             ],
             [
-                'name' => 'Sales',
-                'description' => 'Drives revenue through lead generation and customer relationships',
+                'name' => 'Cloud Operations',
+                'slug' => 'cloud-operations',
+                'description' => 'Manages cloud infrastructure and services.',
                 'is_active' => true,
             ],
             [
-                'name' => 'Customer Support',
-                'description' => 'Provides assistance and resolution to customer inquiries and issues',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Operations',
-                'description' => 'Oversees daily business operations and process optimization',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Research & Development',
-                'description' => 'Innovates and develops new products, features, and technologies',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Legal',
-                'description' => 'Handles legal compliance, contracts, and regulatory matters',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Administration',
-                'description' => 'Manages office operations, facilities, and administrative tasks',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Product Management',
-                'description' => 'Defines product strategy, roadmap, and feature development',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Quality Assurance',
-                'description' => 'Ensures product quality through testing and quality control processes',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Security',
-                'description' => 'Manages information security, compliance, and risk assessment',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Data Analytics',
-                'description' => 'Analyzes data to provide insights and support decision making',
-                'is_active' => true,
-            ],
-            [
-                'name' => 'Procurement',
-                'description' => 'Manages vendor relationships and purchasing of goods and services',
+                'name' => 'Email & Collaboration',
+                'slug' => 'email-collaboration',
+                'description' => 'Handles email systems, collaboration tools, and messaging issues.',
                 'is_active' => true,
             ],
         ];
 
-        foreach ($departments as $department) {
-            Department::create($department);
+        foreach ($departments as $deptData) {
+            Department::updateOrCreate(
+                ['slug' => $deptData['slug']],
+                $deptData
+            );
         }
 
-        $this->command->info('Departments seeded successfully!');
+        $this->command->info('IT Departments seeded successfully!');
         $this->command->info('Total departments: ' . Department::count());
     }
 }

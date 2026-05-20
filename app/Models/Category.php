@@ -17,6 +17,7 @@ class Category extends Model
         'color',
         'priority_level',
         'is_active',
+        'department_id',
     ];
 
     protected $casts = [
@@ -28,10 +29,21 @@ class Category extends Model
     {
         return $this->hasMany(Ticket::class);
     }
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
 
     // Accessor for tickets count
     public function getTicketsCountAttribute()
     {
         return $this->tickets()->count();
+    }
+    
+
+    // Accessor for knowledge bases count
+    public function getKnowledgeBasesCountAttribute()
+    {
+        return 0;
     }
 }

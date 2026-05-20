@@ -28,4 +28,5 @@ class DashboardController extends Controller
         
         return view('agent.dashboard', compact('stats', 'myTickets'));
     }
+
 }

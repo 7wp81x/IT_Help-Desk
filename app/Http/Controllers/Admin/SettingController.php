@@ -24,7 +24,8 @@ class SettingController extends Controller
 
     public function knowledgeBase()
     {
-        return view('admin.settings.knowledge-base');
+        // Knowledge base settings removed
+        return redirect()->route('admin.settings.index');
     }
 
     public function faqs()

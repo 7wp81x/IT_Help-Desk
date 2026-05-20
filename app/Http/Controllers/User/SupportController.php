@@ -24,11 +24,11 @@ class SupportController extends Controller
                 'items' => [
                     [
                         'question' => 'How do I create a new ticket?',
-                        'answer' => 'Navigate to "New Ticket" in the sidebar or visit the tickets section. Fill in the required information and submit your ticket.'
+                        'answer' => 'Navigate to "<a href="'.route('user.tickets.create').'" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">New Ticket</a>" in the sidebar or visit the "<a href="'.route('user.tickets.index').'" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">tickets</a>" section. Fill in the required information and submit your ticket.'
                     ],
                     [
                         'question' => 'How do I track my ticket status?',
-                        'answer' => 'Go to "My Tickets" to see all your tickets with their current status. Click on any ticket to view detailed information.'
+                        'answer' => 'Go to "<a href="'.route('user.tickets.index').'" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">My Tickets</a>" to see all your tickets with their current status. Click on any ticket to view detailed information.'
                     ],
                 ]
             ],
@@ -37,11 +37,11 @@ class SupportController extends Controller
                 'items' => [
                     [
                         'question' => 'How do I update my profile information?',
-                        'answer' => 'Click on your profile icon in the bottom left, then select "Edit Profile" to update your information.'
+                        'answer' => 'Click on your profile icon in the bottom left, then select "<a href="'.route('user.profile').'" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Edit Profile</a>" to update your information.'
                     ],
                     [
                         'question' => 'How do I change my password?',
-                        'answer' => 'Go to your profile, select "Change Password", and follow the instructions to set a new password.'
+                        'answer' => 'Go to your profile, select "<a href="'.route('user.profile.password').'" class="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Change Password</a>", and follow the instructions to set a new password.'
                     ],
                 ]
             ],

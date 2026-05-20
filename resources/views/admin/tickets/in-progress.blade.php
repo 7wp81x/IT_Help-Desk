@@ -15,6 +15,8 @@
             </div>
         </div>
     </div>
-    <!-- Table content -->
+
+    @include('admin.tickets.partials.filters')
+    @include('admin.tickets.partials.table', ['tickets' => $tickets])
 </div>
 @endsection

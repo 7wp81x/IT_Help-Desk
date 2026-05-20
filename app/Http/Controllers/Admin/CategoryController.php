@@ -12,6 +12,7 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $query = Category::query();
+        $status = strtolower(trim($request->input('status', 'all')));
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -22,16 +23,29 @@ class CategoryController extends Controller
             });
         }
 
-        if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('is_active', $request->status === 'active');
+        if (in_array($status, ['active', 'inactive'], true)) {
+            $query->where('is_active', $status === 'active');
         }
 
         $categories = $query->withCount('tickets')->orderBy('priority_level', 'desc')->paginate(20)->withQueryString();
 
-        $totalCategories = Category::count();
-        $activeCategories = Category::where('is_active', true)->count();
-        $inactiveCategories = Category::where('is_active', false)->count();
-        $usedCategories = Category::whereHas('tickets')->count();
+        // Calculate stats based on current query if filtering is applied
+        $isFiltered = $request->filled('search') || in_array($status, ['active', 'inactive'], true);
+
+        if ($isFiltered) {
+            // For filtered results, calculate stats from the current query
+            $filteredQuery = clone $query;
+            $totalCategories = $filteredQuery->count();
+            $activeCategories = (clone $filteredQuery)->where('is_active', true)->count();
+            $inactiveCategories = (clone $filteredQuery)->where('is_active', false)->count();
+            $usedCategories = (clone $filteredQuery)->whereHas('tickets')->count();
+        } else {
+            // For unfiltered results, show total system stats
+            $totalCategories = Category::count();
+            $activeCategories = Category::where('is_active', true)->count();
+            $inactiveCategories = Category::where('is_active', false)->count();
+            $usedCategories = Category::whereHas('tickets')->count();
+        }
 
         if ($request->ajax()) {
             return response()->json([
@@ -42,6 +56,7 @@ class CategoryController extends Controller
                 'active' => $activeCategories,
                 'inactive' => $inactiveCategories,
                 'used' => $usedCategories,
+                'status' => $status,
             ]);
         }
 
@@ -112,6 +127,37 @@ class CategoryController extends Controller
 
         return redirect()->route('admin.categories.index')->with('success', 'Category updated successfully!');
     }
+    /**
+ * Get categories by department for AJAX requests
+ */
+/**
+ * Get categories by department for AJAX requests
+ */
+public function getByDepartment(Request $request)
+{
+    $departmentId = $request->input('department_id');
+    
+    if (!$departmentId) {
+        return response()->json([
+            'success' => false,
+            'categories' => [],
+            'message' => 'No department selected'
+        ]);
+    }
+    
+    // First, check if there are any categories with this department_id
+    $categories = Category::where('is_active', true)
+        ->where('department_id', $departmentId)
+        ->orderBy('name')
+        ->get(['id', 'name', 'department_id']);
+    
+    // If no categories found, return empty array
+    return response()->json([
+        'success' => true,
+        'categories' => $categories,
+        'count' => $categories->count()
+    ]);
+}
 
     public function toggleStatus(int $id)
     {

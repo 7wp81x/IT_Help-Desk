@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\AgentRating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AgentController extends Controller
 {
@@ -21,9 +22,25 @@ class AgentController extends Controller
                 $q->where('status', 'resolved');
             }]);
 
+        // Search by name or email
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
         // Filter by department
         if ($request->filled('department')) {
-            $query->where('department', $request->department);
+            $departmentValue = $request->department;
+            if (is_numeric($departmentValue)) {
+                $query->where('department_id', $departmentValue);
+            } else {
+                $query->whereHas('department', function ($q) use ($departmentValue) {
+                    $q->where('name', $departmentValue);
+                });
+            }
         }
 
         // Filter by specialization
@@ -63,6 +80,38 @@ class AgentController extends Controller
             return $agent;
         });
 
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->input('ajax')) {
+            $html = view('user.agents.cards', compact('agents'))->render();
+            $pagination = $agents->render();
+            $resultsCount = view('user.agents.results-count', compact('agents'))->render();
+
+            // Get updated statistics
+            $allAgents = User::where('role', 'agent')->with(['agentRatings', 'assignedTickets' => function($q) {
+                $q->where('status', 'resolved');
+            }])->get();
+
+            $allAgents->transform(function ($agent) {
+                $agent->average_rating = $agent->agentRatings->avg('rating') ?? 0;
+                $agent->total_resolved = $agent->assignedTickets->count();
+                $agent->total_ratings = $agent->agentRatings->count();
+                return $agent;
+            });
+
+            $stats = [
+                'total' => $allAgents->count(),
+                'resolved' => number_format($allAgents->sum('total_resolved')),
+                'rating' => number_format($allAgents->avg('average_rating') ?? 4.5, 1),
+            ];
+
+            return response()->json([
+                'html' => $html,
+                'pagination' => $pagination,
+                'results_count' => $resultsCount,
+                'stats' => $stats,
+            ]);
+        }
+
         return view('user.agents.index', compact('agents'));
     }
 
@@ -91,7 +140,7 @@ class AgentController extends Controller
         ];
 
         // Get user's past tickets with this agent
-        $userTicketsWithAgent = auth()->user()->tickets()
+        $userTicketsWithAgent = Auth::user()->tickets()
             ->where('assigned_to', $agent->id)
             ->with('agentRating')
             ->latest()

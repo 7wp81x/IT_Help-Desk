@@ -16,9 +16,7 @@
         </div>
     </div>
 
-    <!-- Similar table structure as closed.blade.php but for open tickets -->
-    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <!-- Table content here -->
-    </div>
+    @include('admin.tickets.partials.filters')
+    @include('admin.tickets.partials.table', ['tickets' => $tickets])
 </div>
 @endsection

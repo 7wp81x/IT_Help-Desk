@@ -28,6 +28,7 @@
 
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <!-- Keep your existing stats cards -->
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-5 border border-gray-200 dark:border-gray-700 hover:shadow-md transition-all">
             <div class="flex items-center justify-between">
                 <div>
@@ -191,7 +192,36 @@
 
 @include('admin.users.partials.modals')
 
-<!-- Bulk Delete Modal (same as categories) -->
+<!-- Single Delete Modal (same design as bulk delete) -->
+<div id="singleDeleteModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-95 opacity-0" id="singleDeleteModalContent">
+        <div class="p-6">
+            <div class="flex items-center justify-center mb-4">
+                <div class="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                    <i class="bi bi-exclamation-triangle text-3xl text-red-600 dark:text-red-400"></i>
+                </div>
+            </div>
+            <h3 class="text-xl font-semibold text-center text-gray-900 dark:text-white mb-2">Delete User</h3>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-6">
+                Are you sure you want to delete <span id="singleDeleteUserName" class="font-semibold text-red-600 dark:text-red-400"></span>?<br>
+                This action cannot be undone.
+            </p>
+            <div class="flex gap-3">
+                <button id="cancelSingleDeleteBtn" 
+                        class="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition font-medium">
+                    Cancel
+                </button>
+                <button id="confirmSingleDeleteBtn" 
+                        class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition font-medium flex items-center justify-center gap-2">
+                    <i class="bi bi-trash"></i>
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Delete Modal -->
 <div id="bulkDeleteModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 backdrop-blur-sm transition-all duration-200">
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-200 scale-95 opacity-0" id="bulkDeleteModalContent">
         <div class="p-6">
@@ -248,6 +278,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusMessage = document.getElementById('statusMessage');
     let typingTimer;
     
+    // Single Delete Modal elements
+    const singleDeleteModal = document.getElementById('singleDeleteModal');
+    const singleDeleteModalContent = document.getElementById('singleDeleteModalContent');
+    const cancelSingleDeleteBtn = document.getElementById('cancelSingleDeleteBtn');
+    const confirmSingleDeleteBtn = document.getElementById('confirmSingleDeleteBtn');
+    const singleDeleteUserName = document.getElementById('singleDeleteUserName');
+    let pendingSingleDeleteId = null;
+    let pendingSingleDeleteName = null;
+    
     // Bulk Delete Modal elements
     const bulkDeleteModal = document.getElementById('bulkDeleteModal');
     const bulkDeleteModalContent = document.getElementById('bulkDeleteModalContent');
@@ -256,6 +295,91 @@ document.addEventListener('DOMContentLoaded', function() {
     const bulkDeleteCountSpan = document.getElementById('bulkDeleteCount');
     let pendingBulkDeleteIds = [];
     
+    // Single Delete Functions
+    function showSingleDeleteModal(userId, userName) {
+        pendingSingleDeleteId = userId;
+        pendingSingleDeleteName = userName;
+        if (singleDeleteUserName) singleDeleteUserName.textContent = userName;
+        if (singleDeleteModal) {
+            singleDeleteModal.classList.remove('hidden');
+            singleDeleteModal.classList.add('flex');
+            setTimeout(() => {
+                singleDeleteModalContent.classList.remove('scale-95', 'opacity-0');
+                singleDeleteModalContent.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+    }
+    
+    function closeSingleDeleteModal() {
+        singleDeleteModalContent.classList.remove('scale-100', 'opacity-100');
+        singleDeleteModalContent.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            singleDeleteModal.classList.remove('flex');
+            singleDeleteModal.classList.add('hidden');
+            pendingSingleDeleteId = null;
+            pendingSingleDeleteName = null;
+        }, 200);
+    }
+    
+    if (cancelSingleDeleteBtn) {
+        cancelSingleDeleteBtn.addEventListener('click', closeSingleDeleteModal);
+    }
+    
+    if (singleDeleteModal) {
+        singleDeleteModal.addEventListener('click', function(e) {
+            if (e.target === singleDeleteModal) closeSingleDeleteModal();
+        });
+    }
+    
+    // Confirm single delete
+    if (confirmSingleDeleteBtn) {
+        confirmSingleDeleteBtn.addEventListener('click', function() {
+            if (!pendingSingleDeleteId) {
+                closeSingleDeleteModal();
+                return;
+            }
+            
+            confirmSingleDeleteBtn.disabled = true;
+            confirmSingleDeleteBtn.innerHTML = '<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> Deleting...';
+            
+            fetch(`/admin/users/${pendingSingleDeleteId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showStatusMessage('success', data.message || 'User deleted successfully.');
+                    fetchUsers();
+                    closeSingleDeleteModal();
+                } else {
+                    showStatusMessage('error', data.message || 'Error deleting user.');
+                    closeSingleDeleteModal();
+                }
+                confirmSingleDeleteBtn.disabled = false;
+                confirmSingleDeleteBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            })
+            .catch(error => {
+                console.error('Delete error:', error);
+                showStatusMessage('error', 'An error occurred while deleting the user.');
+                closeSingleDeleteModal();
+                confirmSingleDeleteBtn.disabled = false;
+                confirmSingleDeleteBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            });
+        });
+    }
+    
+    // Show single delete modal from delete button
+    window.showDeleteModal = function(userId, userName) {
+        showSingleDeleteModal(userId, userName);
+    };
+    
+    // Bulk Delete Functions
     function showBulkModal(count) {
         if (bulkDeleteCountSpan) bulkDeleteCountSpan.textContent = count;
         if (bulkDeleteModal) {
@@ -354,12 +478,6 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const button = this;
         const userId = button.dataset.id;
-        const isSelf = button.dataset.self === 'true';
-        
-        if (isSelf) {
-            showStatusMessage('error', 'You cannot change the status of your own account.');
-            return;
-        }
         
         fetch(`/admin/users/${userId}/toggle`, {
             method: 'POST',
@@ -444,15 +562,22 @@ document.addEventListener('DOMContentLoaded', function() {
             bulkDeleteBtn.addEventListener('click', function() {
                 const checkedBoxes = document.querySelectorAll('.user-checkbox:checked');
                 const selectedIds = Array.from(checkedBoxes).map(cb => cb.value);
-                const currentUserId = {{ Auth::id() }};
-                
-                if (selectedIds.includes(String(currentUserId))) {
-                    showStatusMessage('error', 'You cannot delete your own account!');
-                    return;
-                }
                 
                 if (selectedIds.length === 0) {
                     showStatusMessage('error', 'Please select at least one user to delete.');
+                    return;
+                }
+                
+                // Check for approved agents
+                const approvedAgents = Array.from(checkedBoxes).filter(cb => cb.dataset.isApprovedAgent === 'true');
+                if (approvedAgents.length > 0) {
+                    const agentNames = approvedAgents.map(cb => {
+                        const row = cb.closest('tr');
+                        const nameCell = row.querySelector('td:nth-child(3) p');
+                        return nameCell ? nameCell.textContent.trim() : 'Unknown';
+                    }).join(', ');
+                    
+                    showStatusMessage('error', `Approved agents cannot be deleted. Please reject their applications first. Approved agents: ${agentNames}`);
                     return;
                 }
                 
@@ -483,21 +608,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 },
                 body: JSON.stringify({ user_ids: pendingBulkDeleteIds })
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                console.log('Response ok:', response.ok);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
+            .then(response => response.json())
             .then(data => {
-                console.log('Response data:', data);
                 if (data.success) {
                     showStatusMessage('success', data.message || `${pendingBulkDeleteIds.length} user(s) deleted successfully.`);
                     fetchUsers();
                     closeBulkModal();
-                    // Clear all checkboxes
                     document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
                     if (selectAllCheckbox) selectAllCheckbox.checked = false;
                     updateBulkActionsBar();
@@ -509,8 +625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 confirmBulkDeleteBtn.innerHTML = '<i class="bi bi-trash"></i> Delete';
             })
             .catch(error => {
-                console.error('Bulk delete error details:', error);
-                console.error('Error message:', error.message);
+                console.error('Bulk delete error:', error);
                 showStatusMessage('error', 'An error occurred while deleting users.');
                 closeBulkModal();
                 confirmBulkDeleteBtn.disabled = false;

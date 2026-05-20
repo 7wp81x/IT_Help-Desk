@@ -5,6 +5,7 @@ namespace App\Http\Controllers\User;
 use App\Http\Controllers\Controller;
 use App\Models\AgentRating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class RatingController extends Controller
 {
@@ -16,7 +17,22 @@ class RatingController extends Controller
     public function index(Request $request)
     {
         $query = AgentRating::with(['agent:id,name,avatar,department', 'ticket:id,ticket_number,title'])
-            ->where('user_id', auth()->id());
+            ->where('user_id', Auth::id());
+
+        // Search by agent name, ticket number, or comment
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('agent', function ($agentQuery) use ($search) {
+                    $agentQuery->where('name', 'like', "%{$search}%");
+                })
+                ->orWhereHas('ticket', function ($ticketQuery) use ($search) {
+                    $ticketQuery->where('ticket_number', 'like', "%{$search}%")
+                               ->orWhere('title', 'like', "%{$search}%");
+                })
+                ->orWhere('comment', 'like', "%{$search}%");
+            });
+        }
 
         // Filter by rating
         if ($request->filled('rating')) {
@@ -42,12 +58,36 @@ class RatingController extends Controller
 
         $ratings = $query->paginate(10);
 
+        // Handle AJAX requests
+        if ($request->expectsJson() || $request->input('ajax')) {
+            $html = view('user.ratings.cards', compact('ratings'))->render();
+            $pagination = $ratings->render();
+            $resultsCount = view('user.ratings.results-count', compact('ratings'))->render();
+
+            // Get updated statistics
+            $allRatings = AgentRating::where('user_id', Auth::id())->get();
+
+            $stats = [
+                'total' => $allRatings->count(),
+                '5star' => $allRatings->where('rating', 5)->count(),
+                'comments' => $allRatings->whereNotNull('comment')->count(),
+                'avg' => $allRatings->count() > 0 ? number_format($allRatings->avg('rating'), 1) : 'N/A',
+            ];
+
+            return response()->json([
+                'html' => $html,
+                'pagination' => $pagination,
+                'results_count' => $resultsCount,
+                'stats' => $stats,
+            ]);
+        }
+
         return view('user.ratings.index', compact('ratings'));
     }
 
     public function edit(AgentRating $rating)
     {
-        if ($rating->user_id !== auth()->id()) {
+        if ($rating->user_id !== Auth::id()) {
             abort(403);
         }
 
@@ -62,7 +102,7 @@ class RatingController extends Controller
 
     public function update(Request $request, AgentRating $rating)
     {
-        if ($rating->user_id !== auth()->id()) {
+        if ($rating->user_id !== Auth::id()) {
             abort(403);
         }
 
@@ -85,7 +125,7 @@ class RatingController extends Controller
 
     public function destroy(AgentRating $rating)
     {
-        if ($rating->user_id !== auth()->id()) {
+        if ($rating->user_id !== Auth::id()) {
             abort(403);
         }
 

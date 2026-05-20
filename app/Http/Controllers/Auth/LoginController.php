@@ -18,14 +18,18 @@ class LoginController extends Controller
         $this->middleware('guest')->except('logout');
     }
 
+    public function showLoginForm()
+    {
+        if (Auth::check()) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('welcome')->with('showLoginModal', true);
+    }
+
     protected function redirectTo()
     {
         $user = Auth::user();
-        
-        // If pending agent, redirect to pending approval page
-        if ($user->role === 'pending_agent') {
-            return '/pending-approval';
-        }
         
         if ($user->role === 'admin') {
             return '/admin/dashboard';
@@ -48,5 +52,16 @@ class LoginController extends Controller
         $user->last_login_at = now();
         $user->last_login_ip = $request->ip();
         $user->save();
+    }
+
+    /**
+     * Handle failed login attempts and keep the login modal open.
+     */
+    protected function sendFailedLoginResponse(Request $request)
+    {
+        return redirect()->back()
+            ->withInput($request->only($this->username(), 'remember'))
+            ->withErrors([$this->username() => trans('auth.failed')], 'login')
+            ->with('showLoginModal', true);
     }
 }
