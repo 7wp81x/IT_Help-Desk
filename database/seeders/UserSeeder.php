@@ -81,7 +81,7 @@ class UserSeeder extends Seeder
                         'specialization' => null,
                         'skills' => null,
 
-                        'schedule' => $schedule,
+                        'schedule' => json_encode($schedule),
                         'day_off' => false,
 
                         'email_verified_at' => now(),

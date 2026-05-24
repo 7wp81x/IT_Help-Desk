@@ -33,7 +33,7 @@ class AgentNotificationController extends Controller
             ]);
         }
 
-        return view('agent.notifications.index', compact('notifications', 'unreadCount', 'readCount'));
+        return view('agent.notifications.notification', compact('notifications', 'unreadCount', 'readCount'));
     }
 
     public function show(Request $request, DatabaseNotification $notification)
@@ -55,7 +55,7 @@ class AgentNotificationController extends Controller
             return redirect()->route('agent.tickets.show', $ticketId);
         }
 
-        return redirect()->route('agent.dashboard');
+        return view('agent.notifications.show', compact('notification', 'data'));
     }
 
     public function markAllRead(Request $request)
